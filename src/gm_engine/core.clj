@@ -35,3 +35,17 @@
   (apply + (map #(if (>= % limit) 1 0) input))
 )
 
+(defn rollKeep
+  "[col of ints] int bool; check type (high or low), take (num) highest or lowest elements of input collection"
+  ([input num]
+   (rollKeep input num false))
+  ([input num low?]  
+   (let [sorted (sort input)
+         keepType (if low? >= <=)
+         length (count input)]
+     (loop [i (if low? 0 (- length 1)) result []]
+       (if (keepType i (if low? num (- length num)))
+         result
+         (recur (if low? (inc i) (dec i)) 
+                (into result [(nth sorted i)])))))))
+
