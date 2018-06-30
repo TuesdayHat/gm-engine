@@ -6,24 +6,18 @@
   [& args]
   (println "Hello, World!"))
 
+(def test-str "10000d20+3d6+10 #hello world")
+
 (defn chunker
-  "takes in a string, creates a vector of each command"
   [string]
-  )
+  (let [comm (re-find #"(?:(?!\#).)*" string)]
+    (subvec (clojure.string/split (clojure.string/replace comm #"([0-9]+)" (str " $1 ")) #" ")1))
+)
 
 (defn roll
+  "roll (dice) d (size)"
   [dice size]
   (mapv (fn [x] (+ 1 (rand-int size))) (range dice)))
-
-(defn rollLoop
-  "2 args: number of rolls, size of dice"
-  [rolls size]
-  (loop [i rolls result []]
-    (if (zero? i)
-      result
-      (do
-        (recur (dec i) (into result
-                             [(+ 1 (rand-int size))]))))))
 
 (defn total
   "takes a vector of integers, outputs the original vector and the total of all members."
@@ -31,6 +25,7 @@
   (str input " total: " (apply + input)))
 
 (defn pool
+  "returns the number of dice which roll above limit"
   [input limit]
   (apply + (map #(if (>= % limit) 1 0) input))
 )
@@ -49,3 +44,26 @@
          (recur (if low? (inc i) (dec i)) 
                 (into result [(nth sorted i)])))))))
 
+
+;; Variables
+
+(def comm-list {"d" roll
+                "=" total
+                ">" pool
+                "k" rollKeep
+                "+" +
+                "*" *
+                "/" /
+                 })
+
+;; Science Experiments
+
+(defn rollLoop
+  "2 args: number of rolls, size of dice"
+  [rolls size]
+  (loop [i rolls result []]
+    (if (zero? i)
+      result
+      (do
+        (recur (dec i) (into result
+                             [(+ 1 (rand-int size))]))))))
