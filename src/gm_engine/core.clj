@@ -6,9 +6,17 @@
   [& args]
   (println "Hello, World!"))
 
-(def test-str "10000d20+3d6+10 #hello world")
+(def test-str "10d6+3d6+10 #hello world")
+
+(defn parser
+  [chunks]
+  (let [[a comm b & remain] chunks]
+    (printf "a: %s ; b: %s ; comm: %s ; remain: %s" a b comm remain)
+    ((get comm-list comm) (parse-int a) (parse-int b)))
+)
 
 (defn chunker
+  "breaks input string into a vector of numbers and commands"
   [string]
   (let [comm (re-find #"(?:(?!\#).)*" string)]
     (subvec (clojure.string/split (clojure.string/replace comm #"([0-9]+)" (str " $1 ")) #" ")1))
@@ -30,7 +38,7 @@
   (apply + (map #(if (>= % limit) 1 0) input))
 )
 
-(defn rollKeep
+(defn roll-keep
   "[col of ints] int bool; check type (high or low), take (num) highest or lowest elements of input collection"
   ([input num]
    (rollKeep input num false))
@@ -44,6 +52,11 @@
          (recur (if low? (inc i) (dec i)) 
                 (into result [(nth sorted i)])))))))
 
+
+;; helpers
+
+(defn parse-int [n]
+  (Integer. (re-find #"[0-9]+" n)))
 
 ;; Variables
 
