@@ -22,13 +22,18 @@
 (defn parser
   [input]
   (cond
-    (> (.indexOf input ")") -1) (let [expand 
-                                      (subvec input 
-                                              (+ (last (indexes-of "(" input))1)
-                                              (.indexOf input ")"))] 
-                                  (parser expand))
-    :else input)
-)
+    (> (.indexOf input ")") -1) (let [left-par (+ (last (indexes-of "(" input))1) ;parentheses handling
+                                      right-par (.indexOf input ")")
+                                      expand (subvec input left-par right-par)]
+                                  ;(println expand)
+                                  ;(println (subvec input 0 (- left-par 1)))
+                                  (parser (into [] 
+                                                (concat 
+                                                 (into [] (subvec input 0 (- left-par 1))) 
+                                                 (parser expand) 
+                                                 (into [] (subvec input (+ right-par 1)))))));TODO: figure out how to make this all work with lazy seqs
+    
+    :else input))
 
 
 (defn test-recursion 
