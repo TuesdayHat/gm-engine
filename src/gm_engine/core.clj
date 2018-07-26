@@ -52,7 +52,7 @@
                                                         (into []
                                                               (concat
                                                                (into [] (subvec input 0 (- (.indexOf input "d") 1))) ;left
-                                                               (roll-keep rolls (read-string (get input (+ 1 (.indexOf input after)))) true) ;resolve
+                                                               (conj [] (apply + (roll-keep rolls (read-string (get input (+ 1 (.indexOf input after)))) true))) ;resolve
                                                                (into [] (subvec input (+ (.indexOf input after) 2))) ;right
                                                                )))
                                    ;keep high
@@ -60,7 +60,7 @@
                                                  (into []
                                                        (concat
                                                         (into [] (subvec input 0 (- (.indexOf input "d") 1)))
-                                                        (roll-keep rolls (read-string after))
+                                                        (conj [] (apply + (roll-keep rolls (read-string after))))
                                                         (into [] (subvec input (+ 1 (.indexOf input after))))
                                                         )))
                                    ;pool
@@ -81,6 +81,17 @@
                                                  )))
                                    )
                                  )
+    ;MATH -- TODO: REFACTOR
+    (> (.indexOf input "/") -1) (parser
+                                 (into []
+                                       (concat
+                                        (into [] (subvec input 0 (- (.indexOf input "/") 1)))
+                                        (conj [] (/ (read-string (get input (- (.indexOf input "/") 1))) (read-string (get input(+ (.indexOf input "/") 1)))))
+                                        (into [] (subvec input (+ (.indexOf input "/") 2)))
+                                        )))
+    ;; (> (.indexOf input "*") -1) ()
+    ;; (> (.indexOf input "+") -1) ()
+    ;; (> (.indexOf input "-") -1) ()
     :else input))
 
 (defn chunker
@@ -134,7 +145,7 @@
 
 ;; Variables
 
-(def operations ["*" "/" "+" "-"])
+(def math-op ["*" "/" "+" "-"])
 
 (def comm-list {"d" roll
                 "=" total
