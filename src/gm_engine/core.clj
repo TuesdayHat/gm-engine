@@ -10,7 +10,7 @@
  )
 
 (def str-one "10d6+3d6+10 #hello world")
-(def str-two "2d6k1+((3d4+4)/2)#dmg")
+(def str-two "3d6k2+((3d4+4)/2)#dmg")
 
 (defn parse-recur ;TODO: FIX THIS
   "helper function to save space in parser. Handles the recursion step"
@@ -53,7 +53,7 @@
                                                               (concat
                                                                (into [] (subvec input 0 (- (.indexOf input "d") 1))) ;left
                                                                (roll-keep rolls (read-string after) true) ;resolve
-                                                               (into [] (subvec input (+ (.indexOf input after) 1))) ;right
+                                                               (into [] (subvec input (+ (.indexOf input after) 2))) ;right
                                                                )))
                                    ;keep high
                                    (= next "k") (parser 
@@ -75,8 +75,8 @@
                                    :else (parser
                                           (into []
                                                 (concat
-                                                 (conj (into [] (subvec input 0 (- (.indexOf input "d") 1)))
-                                                       (apply + rolls))
+                                                 (into [] (subvec input 0 (- (.indexOf input "d") 1)))
+                                                 (conj [] (apply + rolls))
                                                  (into [] (subvec input (+ 2 (.indexOf input "d"))))
                                                  )))
                                    )
@@ -119,7 +119,7 @@
          keepType (if low? >= <=)
          length (count input)]
      (loop [i (if low? 0 (- length 1)) result []]
-       (if (keepType i (if low? num (- length num)))
+       (if (keepType i (if low? num (- length (+ num 1))))
          result
          (recur (if low? (inc i) (dec i)) 
                 (into result [(nth sorted i)])))))))
