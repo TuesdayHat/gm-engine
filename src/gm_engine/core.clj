@@ -1,25 +1,48 @@
 (ns gm-engine.core
-  (:gen-class
-   :name engine))
+  (:gen-class))
 
-(defn -main
-  "wrapper for parser function; handles comments. Takes a string as an argument, returns a string."
+;; helpers
+
+(defn indexes-of [e coll] (keep-indexed #(if (= e %2) %1) coll))
+
+(defn parse-int [n]
+  (Integer. (re-find #"[0-9]+" n)))
+
+(defn roll
+  "roll (dice) d (size)"
+  [dice size]
+  (mapv (fn [x] (+ 1 (rand-int size))) (range dice)))
+
+(defn total
+  "takes a vector of integers, outputs the original vector and the total of all members."
   [input]
-  (let [chunk-form (chunker input)]
-    (conj (parser chunk-form) (re-find #"\#.+" input) ))
- )
+  (str input " total: " (apply + input)))
 
-(def str-one "10d6+3d6+10 #hello world")
-(def str-two "3d6k2+((3d4+4)/2)#dmg")
+(defn pool
+  "returns the number of dice which roll above limit"
+  [input limit]
+  (apply + (map #(if (>= % limit) 1 0) input))
+)
 
-(defn parse-recur ;TODO: FIX THIS
-  "helper function to save space in parser. Handles the recursion step"
-  [input left resolved right]
-  (into []
-          (concat
-           (into [] (subvec input 0 left))
-           resolved
-           (into [] (subvec input right)))))
+(defn unique
+  "PLACEHOLDER -- returns a number of unique random numbers"
+  [input table]
+  input
+)
+
+(defn roll-keep
+  "[col of ints] int bool; check type (high or low), take (num) highest or lowest elements of input collection"
+  ([input num] ;roll high
+   (roll-keep input num false))
+  ([input num low?] 
+   (let [sorted (sort input)
+         keepType (if low? >= <)
+         length (count input)]
+     (loop [i (if low? 0 (- length 1)) result []]
+       (if (keepType i (if low? num (- length num)))
+         result
+         (recur (if low? (inc i) (dec i)) 
+                (into result [(nth sorted i)])))))))
 
 (defn parser ;;TODO refactor recursion call
   "Main parsing function. recursively resolves parts of input. Takes in a formatted vector, outputs a vector"
@@ -27,7 +50,6 @@
   (cond
     ;;parentheses handling
     (> (.indexOf input ")") -1) (let [left-par (+ (last (indexes-of "(" input))1) right-par (.indexOf input ")") expand (subvec input left-par right-par)]
-                                  (println input)
                                   (parser 
                                    (into [] 
                                          (concat 
@@ -44,7 +66,6 @@
                                       rolls (roll dice size)
                                       next (get input (+ (.indexOf input "d") 2))
                                       after (get input (+ (.indexOf input "d") 3))]
-                                 (println (str dice "d" size ": " rolls " -- " next ", " after))
                                  (cond
                                    ;keep low
                                    (and (= next "k") 
@@ -86,7 +107,7 @@
                                  (into []
                                        (concat
                                         (into [] (subvec input 0 (- (.indexOf input "/") 1)))
-                                        (conj [] (/ (get input (- (.indexOf input "/") 1)) (get input(+ (.indexOf input "/") 1))))
+                                        (conj [] (int (Math/ceil (/ (get input (- (.indexOf input "/") 1)) (get input(+ (.indexOf input "/") 1))))))
                                         (into [] (subvec input (+ (.indexOf input "/") 2)))
                                         )))
 
@@ -116,54 +137,13 @@
     
     :else input))
 
-(defn chunker
+(defn formatting
   "breaks input string into a vector of numbers and commands"
   [string]
   (let [comm (re-find #"(?:(?!\#).)*" string)]
     (into [] (map #(if (re-find #"[0-9]+" %) (parse-int %) %))
           (clojure.string/split (clojure.string/replace comm #"([^0-9]|[0-9]+)" (str "$1 ")) #" "))
     ))
-
-;; (defn num-format
-;;   [vect]
-;;   (let [num #"[0-9]+"]
-;;     (map #((if (re-find % num) )) vect))
-;;   )
-
-(defn roll
-  "roll (dice) d (size)"
-  [dice size]
-  (mapv (fn [x] (+ 1 (rand-int size))) (range dice)))
-
-(defn total
-  "takes a vector of integers, outputs the original vector and the total of all members."
-  [input]
-  (str input " total: " (apply + input)))
-
-(defn pool
-  "returns the number of dice which roll above limit"
-  [input limit]
-  (apply + (map #(if (>= % limit) 1 0) input))
-)
-
-(defn unique
-  [input table]
-  input
-)
-
-(defn roll-keep
-  "[col of ints] int bool; check type (high or low), take (num) highest or lowest elements of input collection"
-  ([input num] ;roll high
-   (roll-keep input num false))
-  ([input num low?] 
-   (let [sorted (sort input)
-         keepType (if low? >= <)
-         length (count input)]
-     (loop [i (if low? 0 (- length 1)) result []]
-       (if (keepType i (if low? num (- length num)))
-         result
-         (recur (if low? (inc i) (dec i)) 
-                (into result [(nth sorted i)])))))))
 
 
 ;; helpers
@@ -197,3 +177,10 @@
       (do
         (recur (dec i) (into result
                              [(+ 1 (rand-int size))]))))))
+
+(defn -main
+  "wrapper for parser function; handles comments. Takes a string as an argument, returns a string."
+  [input]
+  (let [chunk-form (formatting input)]
+    (conj (parser chunk-form) (re-find #"\#.+" input)))
+  )
