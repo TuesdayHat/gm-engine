@@ -1,26 +1,45 @@
 (ns gm-engine.core
-  (:gen-class))
+  (:gen-class
+   :name engine))
 
 (defn -main
   "primary gm engine function -- takes in a vector of strings, calls relevant functions"
-  [& args]
-  (println "Hello, World!"))
+  [input]
+  (let [chunk-form (chunker input)]
+    chunk-form)
+ )
 
-(def test-str "10d6+3d6+10 #hello world")
+(def str-one "10d6+3d6+10 #hello world")
+(def str-two "2d6+((3d4+4)/2)#dmg")
+
+;; (Defn Parser
+;;   [chunks]
+;;   (let [[a comm b & remain] chunks]
+;;     (printf "a: %s ; b: %s ; comm: %s ; remain: %s" a b comm remain)
+;;     ((get comm-list comm) (parse-int a) (parse-int b)))
+;; )
 
 (defn parser
-  [chunks]
-  (let [[a comm b & remain] chunks]
-    (printf "a: %s ; b: %s ; comm: %s ; remain: %s" a b comm remain)
-    ((get comm-list comm) (parse-int a) (parse-int b)))
+  [input]
+  "foo"
 )
+
+
+(defn test-recursion 
+  [x]
+  (if (> x 5)
+    x
+    (test-recursion (inc x))))
 
 (defn chunker
   "breaks input string into a vector of numbers and commands"
   [string]
   (let [comm (re-find #"(?:(?!\#).)*" string)]
-    (subvec (clojure.string/split (clojure.string/replace comm #"([0-9]+)" (str " $1 ")) #" ")1))
-)
+    ;(subvec (clojure.string/split (clojure.string/replace comm #"([0-9]+|\/|\(|\))" (str " $1 ")) #" ")1)
+    ;(clojure.string/split (clojure.string/replace comm #"([0-9]+|\/|\(|\)|\+|\-|d)" (str "$1 ")) #" ")
+    (clojure.string/split (clojure.string/replace comm #"([^0-9]|[0-9]+)" (str "$1 ")) #" ")
+    )
+  )
 
 (defn roll
   "roll (dice) d (size)"
@@ -41,7 +60,7 @@
 (defn roll-keep
   "[col of ints] int bool; check type (high or low), take (num) highest or lowest elements of input collection"
   ([input num]
-   (rollKeep input num false))
+   (roll-keep input num false))
   ([input num low?]  
    (let [sorted (sort input)
          keepType (if low? >= <=)
@@ -60,10 +79,12 @@
 
 ;; Variables
 
+(def operations ["(" "d" ">" "*" "/" "+"])
+
 (def comm-list {"d" roll
                 "=" total
                 ">" pool
-                "k" rollKeep
+                "k" roll-keep ;TODO a way to detect keep high or low
                 "+" +
                 "*" *
                 "/" /
