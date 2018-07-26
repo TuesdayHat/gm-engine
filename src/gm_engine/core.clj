@@ -52,7 +52,7 @@
                                                         (into []
                                                               (concat
                                                                (into [] (subvec input 0 (- (.indexOf input "d") 1))) ;left
-                                                               (roll-keep rolls (read-string after) true) ;resolve
+                                                               (roll-keep rolls (read-string (get input (+ 1 (.indexOf input after)))) true) ;resolve
                                                                (into [] (subvec input (+ (.indexOf input after) 2))) ;right
                                                                )))
                                    ;keep high
@@ -61,7 +61,7 @@
                                                        (concat
                                                         (into [] (subvec input 0 (- (.indexOf input "d") 1)))
                                                         (roll-keep rolls (read-string after))
-                                                        (into [] (subvec input (.indexOf input after)))
+                                                        (into [] (subvec input (+ 1 (.indexOf input after))))
                                                         )))
                                    ;pool
                                    (= next ">") (parser
@@ -116,10 +116,10 @@
    (roll-keep input num false))
   ([input num low?] 
    (let [sorted (sort input)
-         keepType (if low? >= <=)
+         keepType (if low? >= <)
          length (count input)]
      (loop [i (if low? 0 (- length 1)) result []]
-       (if (keepType i (if low? num (- length (+ num 1))))
+       (if (keepType i (if low? num (- length num)))
          result
          (recur (if low? (inc i) (dec i)) 
                 (into result [(nth sorted i)])))))))
