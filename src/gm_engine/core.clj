@@ -3,52 +3,91 @@
    :name engine))
 
 (defn -main
-  "primary gm engine function -- takes in a vector of strings, calls relevant functions"
+  "wrapper for parser function; handles comments. Takes a string as an argument, returns a string."
   [input]
   (let [chunk-form (chunker input)]
     (conj (parser chunk-form) (re-find #"\#.+" input) ))
  )
 
 (def str-one "10d6+3d6+10 #hello world")
-(def str-two "2d6+((3d4+4)/2)#dmg")
+(def str-two "2d6k1+((3d4+4)/2)#dmg")
 
-;; (Defn Parser
-;;   [chunks]
-;;   (let [[a comm b & remain] chunks]
-;;     (printf "a: %s ; b: %s ; comm: %s ; remain: %s" a b comm remain)
-;;     ((get comm-list comm) (parse-int a) (parse-int b)))
-;; )
+(defn parse-recur ;TODO: FIX THIS
+  "helper function to save space in parser. Handles the recursion step"
+  [input left resolved right]
+  (into []
+          (concat
+           (into [] (subvec input 0 left))
+           resolved
+           (into [] (subvec input right)))))
 
-(defn parser
+(defn parser ;;TODO refactor recursion call
+  "Main parsing function. recursively resolves parts of input. Takes in a formatted vector, outputs a vector"
   [input]
   (cond
-    (> (.indexOf input ")") -1) (let [left-par (+ (last (indexes-of "(" input))1) ;parentheses handling
-                                      right-par (.indexOf input ")")
-                                      expand (subvec input left-par right-par)]
-                                  ;(println expand)
-                                  ;(println (subvec input 0 (- left-par 1)))
-                                  (parser (into [] 
-                                                (concat 
-                                                 (into [] (subvec input 0 (- left-par 1))) 
-                                                 (parser expand) 
-                                                 (into [] (subvec input (+ right-par 1)))))));TODO: figure out how to make this all work with lazy seqs
-    
+    ;;parentheses handling
+    (> (.indexOf input ")") -1) (let [left-par (+ (last (indexes-of "(" input))1) right-par (.indexOf input ")") expand (subvec input left-par right-par)]
+                                  (println input)
+                                  (parser 
+                                   (into [] 
+                                         (concat 
+                                          (into [] (subvec input 0 (- left-par 1))) 
+                                          (parser expand)
+                                          (into [] (subvec input (+ right-par 1)))
+                                          )
+                                         )
+                                   )
+                                  );TODO: figure out how to make this all work with lazy seqs
+    ;;DICE
+    (> (.indexOf input "d") -1) (let [dice (read-string (get input (- (.indexOf input "d") 1)))
+                                      size (read-string (get input (+ (.indexOf input "d") 1)))
+                                      rolls (roll dice size)
+                                      next (get input (+ (.indexOf input "d") 2))
+                                      after (get input (+ (.indexOf input "d") 3))]
+                                 (println (str dice "d" size ": " rolls " -- " next ", " after))
+                                 (cond
+                                   ;keep low
+                                   (and (= next "k") 
+                                        (= after "l")) (parser
+                                                        (into []
+                                                              (concat
+                                                               (into [] (subvec input 0 (- (.indexOf input "d") 1))) ;left
+                                                               (roll-keep rolls (read-string after) true) ;resolve
+                                                               (into [] (subvec input (get input (+ (.indexOf input after) 1)))) ;right
+                                                               )))
+                                   ;keep high
+                                   (= next "k") (parser 
+                                                 (into []
+                                                       (concat
+                                                        (into [] (subvec input 0 (- (.indexOf input "d") 1)))
+                                                        (roll-keep rolls (read-string after))
+                                                        (into [] (subvec input (get input (.indexOf input after))))
+                                                        )))
+                                   ;pool
+                                   (= next ">") (parser
+                                                 (into []
+                                                       (concat
+                                                        (into [] (subvec input 0 (- (.indexOf input "d") 1)))
+                                                        (into [] (pool rolls (read-string after)))
+                                                        (into [] (subvec input (get input (.indexOf input after))))
+                                                        )))
+                                   ;resolve
+                                   :else (parser
+                                          (into []
+                                                (concat
+                                                 (conj (into [] (subvec input 0 (- (.indexOf input "d") 1)))
+                                                       (apply + rolls))
+                                                 (into [] (subvec input (+ 2 (.indexOf input "d"))))
+                                                 )))
+                                   )
+                                 )
     :else input))
-
-
-(defn test-recursion 
-  [x]
-  (if (> x 5)
-    x
-    (test-recursion (inc x))))
 
 (defn chunker
   "breaks input string into a vector of numbers and commands"
   [string]
   (let [comm (re-find #"(?:(?!\#).)*" string)]
-    (clojure.string/split (clojure.string/replace comm #"([^0-9]|[0-9]+)" (str "$1 ")) #" ")
-    )
-  )
+    (clojure.string/split (clojure.string/replace comm #"([^0-9]|[0-9]+)" (str "$1 ")) #" ")))
 
 (defn roll
   "roll (dice) d (size)"
@@ -66,11 +105,16 @@
   (apply + (map #(if (>= % limit) 1 0) input))
 )
 
+(defn unique
+  [input table]
+  input
+)
+
 (defn roll-keep
   "[col of ints] int bool; check type (high or low), take (num) highest or lowest elements of input collection"
-  ([input num]
+  ([input num] ;roll high
    (roll-keep input num false))
-  ([input num low?]  
+  ([input num low?] 
    (let [sorted (sort input)
          keepType (if low? >= <=)
          length (count input)]
@@ -90,7 +134,7 @@
 
 ;; Variables
 
-(def operations ["(" "d" ">" "*" "/" "+"])
+(def operations ["*" "/" "+" "-"])
 
 (def comm-list {"d" roll
                 "=" total
