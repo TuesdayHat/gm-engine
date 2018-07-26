@@ -53,7 +53,7 @@
                                                               (concat
                                                                (into [] (subvec input 0 (- (.indexOf input "d") 1))) ;left
                                                                (roll-keep rolls (read-string after) true) ;resolve
-                                                               (into [] (subvec input (get input (+ (.indexOf input after) 1)))) ;right
+                                                               (into [] (subvec input (+ (.indexOf input after) 1))) ;right
                                                                )))
                                    ;keep high
                                    (= next "k") (parser 
@@ -61,7 +61,7 @@
                                                        (concat
                                                         (into [] (subvec input 0 (- (.indexOf input "d") 1)))
                                                         (roll-keep rolls (read-string after))
-                                                        (into [] (subvec input (get input (.indexOf input after))))
+                                                        (into [] (subvec input (.indexOf input after)))
                                                         )))
                                    ;pool
                                    (= next ">") (parser
@@ -69,7 +69,7 @@
                                                        (concat
                                                         (into [] (subvec input 0 (- (.indexOf input "d") 1)))
                                                         (into [] (pool rolls (read-string after)))
-                                                        (into [] (subvec input (get input (.indexOf input after))))
+                                                        (into [] (subvec input (.indexOf input after)))
                                                         )))
                                    ;resolve
                                    :else (parser
