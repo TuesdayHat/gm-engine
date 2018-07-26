@@ -39,8 +39,8 @@
                                    )
                                   );TODO: figure out how to make this all work with lazy seqs
     ;;DICE
-    (> (.indexOf input "d") -1) (let [dice (read-string (get input (- (.indexOf input "d") 1)))
-                                      size (read-string (get input (+ (.indexOf input "d") 1)))
+    (> (.indexOf input "d") -1) (let [dice (get input (- (.indexOf input "d") 1))
+                                      size (get input (+ (.indexOf input "d") 1))
                                       rolls (roll dice size)
                                       next (get input (+ (.indexOf input "d") 2))
                                       after (get input (+ (.indexOf input "d") 3))]
@@ -52,7 +52,7 @@
                                                         (into []
                                                               (concat
                                                                (into [] (subvec input 0 (- (.indexOf input "d") 1))) ;left
-                                                               (conj [] (apply + (roll-keep rolls (read-string (get input (+ 1 (.indexOf input after)))) true))) ;resolve
+                                                               (conj [] (apply + (roll-keep rolls (get input (+ 1 (.indexOf input after))) true))) ;resolve
                                                                (into [] (subvec input (+ (.indexOf input after) 2))) ;right
                                                                )))
                                    ;keep high
@@ -60,7 +60,7 @@
                                                  (into []
                                                        (concat
                                                         (into [] (subvec input 0 (- (.indexOf input "d") 1)))
-                                                        (conj [] (apply + (roll-keep rolls (read-string after))))
+                                                        (conj [] (apply + (roll-keep rolls after)))
                                                         (into [] (subvec input (+ 1 (.indexOf input after))))
                                                         )))
                                    ;pool
@@ -68,7 +68,7 @@
                                                  (into []
                                                        (concat
                                                         (into [] (subvec input 0 (- (.indexOf input "d") 1)))
-                                                        (into [] (pool rolls (read-string after)))
+                                                        (into [] (pool rolls after))
                                                         (into [] (subvec input (.indexOf input after)))
                                                         )))
                                    ;resolve
@@ -86,19 +86,49 @@
                                  (into []
                                        (concat
                                         (into [] (subvec input 0 (- (.indexOf input "/") 1)))
-                                        (conj [] (/ (read-string (get input (- (.indexOf input "/") 1))) (read-string (get input(+ (.indexOf input "/") 1)))))
+                                        (conj [] (/ (get input (- (.indexOf input "/") 1)) (get input(+ (.indexOf input "/") 1))))
                                         (into [] (subvec input (+ (.indexOf input "/") 2)))
                                         )))
-    ;; (> (.indexOf input "*") -1) ()
-    ;; (> (.indexOf input "+") -1) ()
-    ;; (> (.indexOf input "-") -1) ()
+
+    (> (.indexOf input "*") -1) (parser
+                                 (into []
+                                       (concat
+                                        (into [] (subvec input 0 (- (.indexOf input "*") 1)))
+                                        (conj [] (* (get input (- (.indexOf input "*") 1)) (get input(+ (.indexOf input "*") 1))))
+                                        (into [] (subvec input (+ (.indexOf input "*") 2)))
+                                        )))
+
+    (> (.indexOf input "+") -1) (parser
+                                 (into []
+                                       (concat
+                                        (into [] (subvec input 0 (- (.indexOf input "+") 1)))
+                                        (conj [] (+ (get input (- (.indexOf input "+") 1)) (get input(+ (.indexOf input "+") 1))))
+                                        (into [] (subvec input (+ (.indexOf input "+") 2)))
+                                        )))
+
+    (> (.indexOf input "-") -1) (parser
+                                 (into []
+                                       (concat
+                                        (into [] (subvec input 0 (- (.indexOf input "-") 1)))
+                                        (conj [] (- (get input (- (.indexOf input "-") 1)) (get input(+ (.indexOf input "-") 1))))
+                                        (into [] (subvec input (+ (.indexOf input "-") 2)))
+                                        )))
+    
     :else input))
 
 (defn chunker
   "breaks input string into a vector of numbers and commands"
   [string]
   (let [comm (re-find #"(?:(?!\#).)*" string)]
-    (clojure.string/split (clojure.string/replace comm #"([^0-9]|[0-9]+)" (str "$1 ")) #" ")))
+    (into [] (map #(if (re-find #"[0-9]+" %) (parse-int %) %))
+          (clojure.string/split (clojure.string/replace comm #"([^0-9]|[0-9]+)" (str "$1 ")) #" "))
+    ))
+
+;; (defn num-format
+;;   [vect]
+;;   (let [num #"[0-9]+"]
+;;     (map #((if (re-find % num) )) vect))
+;;   )
 
 (defn roll
   "roll (dice) d (size)"
