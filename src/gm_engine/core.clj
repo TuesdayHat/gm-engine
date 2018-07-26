@@ -6,7 +6,7 @@
   "primary gm engine function -- takes in a vector of strings, calls relevant functions"
   [input]
   (let [chunk-form (chunker input)]
-    chunk-form)
+    (conj (parser chunk-form) (re-find #"\#.+" input) ))
  )
 
 (def str-one "10d6+3d6+10 #hello world")
@@ -21,7 +21,13 @@
 
 (defn parser
   [input]
-  "foo"
+  (cond
+    (> (.indexOf input ")") -1) (let [expand 
+                                      (subvec input 
+                                              (+ (last (indexes-of "(" input))1)
+                                              (.indexOf input ")"))] 
+                                  (parser expand))
+    :else input)
 )
 
 
@@ -35,8 +41,6 @@
   "breaks input string into a vector of numbers and commands"
   [string]
   (let [comm (re-find #"(?:(?!\#).)*" string)]
-    ;(subvec (clojure.string/split (clojure.string/replace comm #"([0-9]+|\/|\(|\))" (str " $1 ")) #" ")1)
-    ;(clojure.string/split (clojure.string/replace comm #"([0-9]+|\/|\(|\)|\+|\-|d)" (str "$1 ")) #" ")
     (clojure.string/split (clojure.string/replace comm #"([^0-9]|[0-9]+)" (str "$1 ")) #" ")
     )
   )
@@ -73,6 +77,8 @@
 
 
 ;; helpers
+
+(defn indexes-of [e coll] (keep-indexed #(if (= e %2) %1) coll))
 
 (defn parse-int [n]
   (Integer. (re-find #"[0-9]+" n)))
