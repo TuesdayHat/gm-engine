@@ -89,8 +89,8 @@
                                                  (into []
                                                        (concat
                                                         (into [] (subvec input 0 (- (.indexOf input "d") 1)))
-                                                        (into [] (pool rolls after))
-                                                        (into [] (subvec input (.indexOf input after)))
+                                                        (conj [] (pool rolls after))
+                                                        (into [] (subvec input (+ 1 (.indexOf input after))))
                                                         )))
                                    ;resolve
                                    :else (parser
@@ -142,29 +142,17 @@
   [string]
   (let [comm (re-find #"(?:(?!\#).)*" string)]
     (into [] (map #(if (re-find #"[0-9]+" %) (parse-int %) %))
-          (clojure.string/split (clojure.string/replace comm #"([^0-9]|[0-9]+)" (str "$1 ")) #" "))
+          (filter #(not= % "") (clojure.string/split 
+                                 (clojure.string/replace comm #"([^0-9]|[0-9]+)" (str "$1 ")) #" ")))
     ))
 
-
-;; helpers
-
-(defn indexes-of [e coll] (keep-indexed #(if (= e %2) %1) coll))
-
-(defn parse-int [n]
-  (Integer. (re-find #"[0-9]+" n)))
-
-;; Variables
-
-(def math-op ["*" "/" "+" "-"])
-
-(def comm-list {"d" roll
-                "=" total
-                ">" pool
-                "k" roll-keep ;TODO a way to detect keep high or low
-                "+" +
-                "*" *
-                "/" /
-                 })
+(defn -main
+  "wrapper for parser function; handles comments. Takes a string as an argument, returns a string."
+  [input]
+  (let [chunk-form (formatting input) result (conj (parser chunk-form) (re-find #"\#.+" input))]
+    (println result) ;;result in the let field so -main can later be used for formatting shenanigans
+    result)
+  )
 
 ;; Science Experiments
 
@@ -177,10 +165,3 @@
       (do
         (recur (dec i) (into result
                              [(+ 1 (rand-int size))]))))))
-
-(defn -main
-  "wrapper for parser function; handles comments. Takes a string as an argument, returns a string."
-  [input]
-  (let [chunk-form (formatting input)]
-    (conj (parser chunk-form) (re-find #"\#.+" input)))
-  )

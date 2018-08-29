@@ -1,14 +1,17 @@
 # gm-engine
 
-FIXME: description
+A dicerolling library written in Clojure
 
 ## Installation
 
-Download from http://example.com/FIXME.
+clone from https://github.com/TuesdayHat/gm-engine.git
 
-## Usage
+COMPILE:
 
-FIXME: explanation
+STANDALONE:
+    
+
+## Usage 
 
     $ java -jar gm-engine-0.1.0-standalone.jar [args]
 
