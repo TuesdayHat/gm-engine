@@ -32,7 +32,7 @@ $ java -jar gm-engine.jar [args]
 * kl[] -- roll and keep lowest [] dice. Applies to a dice roll
 * > -- Dicepool. Return number of dice which roll at or above a target number 
   * ex 6d6>5 => roll 6 six sided dice, tell how many rolled 5 or 6
-* # -- comments. Everything written after the # will be returned as-is
+* \# -- comments. Everything written after the # will be returned as-is
 
 ## Examples
 $ lein run 3d6+5
