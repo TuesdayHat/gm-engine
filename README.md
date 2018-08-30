@@ -16,7 +16,7 @@ Requires Leiningen installed
 
 STANDALONE:
 
-* Download .jar file from releases
+* Download .jar file from (releases)[https://github.com/TuesdayHat/gm-engine/releases]
 * From command line, navigate to the folder where you downloaded the .jar
 
 $ java -jar gm-engine.jar [args]
