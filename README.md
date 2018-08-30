@@ -16,7 +16,7 @@ Requires Leiningen installed
 
 STANDALONE:
 
-* Download .jar file from (releases)[https://github.com/TuesdayHat/gm-engine/releases]
+* Download .jar file from [https://github.com/TuesdayHat/gm-engine/releases](releases)
 * From command line, navigate to the folder where you downloaded the .jar
 
 $ java -jar gm-engine.jar [args]
@@ -30,7 +30,7 @@ $ java -jar gm-engine.jar [args]
 * k[] -- roll and keep highest [] dice. Applies to a dice roll 
   * ex 4d6k3 => keep highest 3 dice 
 * kl[] -- roll and keep lowest [] dice. Applies to a dice roll
-* > -- Dicepool. Return number of dice which roll at or above a target number 
+* \> -- Dicepool. Return number of dice which roll at or above a target number 
   * ex 6d6>5 => roll 6 six sided dice, tell how many rolled 5 or 6
 * \# -- comments. Everything written after the # will be returned as-is
 
